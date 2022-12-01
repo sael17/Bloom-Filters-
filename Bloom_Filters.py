@@ -1,5 +1,6 @@
 import sys 
 import csv
+import mmh3
 
 
 # we specify the newline keyword argument and pass an empty string
