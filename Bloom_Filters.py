@@ -55,6 +55,7 @@ if len(sys.argv) > 1:
     setBit(bloomArray, 5)  # Set Bit 5 of bloomArray to 1
     clearBit(bloomArray, 5)  # Set Bit 5 of bloomArray to 0
     testBit(bloomArray, 5)  # Returns a non-zero value if bit 5 is not zero.
+    bloom_filter = []
     
     with open (sys.argv[1],newline="") as db_input:
         next(db_input) # the first line is the header so we skip it
@@ -67,15 +68,40 @@ if len(sys.argv) > 1:
         db_input.seek(0)
         next(db_input)
         bloom_filter = list(makeBitArray(M))
-        print(bloom_filter)
+        #print(bloom_filter)
         
-        def add_to_bloom_filter() -> None:
-            for email in csv_read:
-                for hash_val in range(K):
-                    hash_key = (hash(email[0] + str(hash_val))) % M
-                    #print(hash_key)
-                    setBit(bloom_filter,hash_key)
+        for email in csv_read:
+            for hash_val in range(K):
+                hash_key = (hash(email[0] + str(hash_val))) % M
+                #print(hash_key)
+                setBit(bloom_filter,hash_key)
             # print(bloom_filter)
+            
+    with open (sys.argv[2],newline="") as db_check:
+        next(db_check)  # the first line is the header so we skip it
+        csv_check_read = csv.reader(db_check)  # read the contents of the file
+        # Size of DB. How many emails are in the DB
+        N = len(db_check.readlines())
+        P = 0.0000001  # false positive probability
+        # size of bloom filter
+        M = math.ceil((N*math.log(P))/math.log(1/pow(2, math.log(2))))
+        K = round((M/N) * math.log(2))  # number of hashes
+
+        db_check.seek(0)
+        next(db_check)
+        
+        for email in csv_check_read:
+            email_found = True
+            for hash_key in range(K):
+                hash_key = (hash(email[0] + str(hash_key))) % M
+                if testBit(bloom_filter,hash_key) == 0:
+                    email_found = False
+                    print("{} Not in the DB".format(email))
+                    break
+            if email_found:
+                print("{} probably in the DB".format(email))
+                
+        
             
 
             
